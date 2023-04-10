@@ -57,6 +57,9 @@ public class Brandub {
                     plate.pions.get(i).setVivant(false);
                 }
             }
+            if (plate.brananBetweenEnnemies()) {
+                plate.getBranan().setVivant(false);
+            }
 
             // Switch player
             tmp = current_player;
