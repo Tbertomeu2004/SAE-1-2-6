@@ -100,7 +100,7 @@ public class Pion {
 
         // Search North
         int counter = 1;
-        while (plate.pawnAt(pawn_x, pawn_y + counter) == null && pawn_y + counter < 8) {
+        while ((plate.pawnAt(pawn_x, pawn_y + counter) == null || (plate.pawnAt(pawn_x, pawn_y + counter) != null && !plate.pawnAt(pawn_x, pawn_y + counter).getVivant())) && pawn_y + counter < 8) {
             ArrayList<Integer> coordinates = new ArrayList<Integer>();
             coordinates.add(pawn_x);
             coordinates.add(pawn_y + counter);
@@ -110,7 +110,7 @@ public class Pion {
 
         // Search South
         counter = 1;
-        while (plate.pawnAt(pawn_x, pawn_y - counter) == null && pawn_y - counter > 0) {
+        while ((plate.pawnAt(pawn_x, pawn_y - counter) == null || (plate.pawnAt(pawn_x, pawn_y - counter) != null && !plate.pawnAt(pawn_x, pawn_y - counter).getVivant())) && pawn_y - counter > 0) {
             ArrayList<Integer> coordinates = new ArrayList<Integer>();
             coordinates.add(pawn_x);
             coordinates.add(pawn_y - counter);
@@ -120,7 +120,7 @@ public class Pion {
 
         // Search East
         counter = 1;
-        while (plate.pawnAt(pawn_x + counter, pawn_y) == null && pawn_x + counter < 8) {
+        while ((plate.pawnAt(pawn_x + counter, pawn_y) == null || (plate.pawnAt(pawn_x + counter, pawn_y) != null && !plate.pawnAt(pawn_x + counter, pawn_y).getVivant())) && pawn_x + counter < 8) {
             ArrayList<Integer> coordinates = new ArrayList<Integer>();
             coordinates.add(pawn_x + counter);
             coordinates.add(pawn_y);
@@ -130,7 +130,7 @@ public class Pion {
 
         // Search West
         counter = 1;
-        while (plate.pawnAt(pawn_x - counter, pawn_y) == null && pawn_x - counter > 0) {
+        while ((plate.pawnAt(pawn_x - counter, pawn_y) == null || (plate.pawnAt(pawn_x - counter, pawn_y) != null && !plate.pawnAt(pawn_x - counter, pawn_y).getVivant())) && pawn_x - counter > 0) {
             ArrayList<Integer> coordinates = new ArrayList<Integer>();
             coordinates.add(pawn_x - counter);
             coordinates.add(pawn_y);
@@ -177,28 +177,131 @@ public class Pion {
         return true;
     }
 
-    // TODO: Check if between pawn and center
-    public boolean pawnBetweenEnemies(Plateau plate) {
-        if (this instanceof Defenseur) {
-            return (plate.pawnAt(this.getX() + 1, this.getY()) instanceof Attaquant
-                    && plate.pawnAt(this.getX() - 1, this.getY()) instanceof Attaquant)
-                    || (plate.pawnAt(this.getX(), this.getY() + 1) instanceof Attaquant
-                    && plate.pawnAt(this.getX(), this.getY() - 1) instanceof Attaquant);
-        } else if (this instanceof Attaquant) {
-            return (plate.pawnAt(this.getX()+1, this.getY()) instanceof Defenseur
-                    && plate.pawnAt(this.getX()-1, this.getY()) instanceof Defenseur)
-                    || (plate.pawnAt(this.getX(), this.getY()+1) instanceof Defenseur
-                    && plate.pawnAt(this.getX(), this.getY()-1) instanceof Defenseur);
+    public ArrayList<Pion> nearbyPawns(char player, Plateau plate) {
+        ArrayList<Pion> nearbyPawns = new ArrayList<>();
+        switch (player) {
+            case 'A':
+                if (plate.pawnAt(this.getX() + 1, this.getY()) instanceof Defenseur) {
+                    nearbyPawns.add(plate.pawnAt(this.getX() + 1, this.getY()));
+                }
+                if (plate.pawnAt(this.getX() - 1, this.getY()) instanceof Defenseur){
+                    nearbyPawns.add(plate.pawnAt(this.getX() - 1, this.getY()));
+                }
+                if (plate.pawnAt(this.getX(), this.getY() + 1) instanceof Defenseur) {
+                    nearbyPawns.add(plate.pawnAt(this.getX(), this.getY() + 1));
+                }
+                if (plate.pawnAt(this.getX(), this.getY() - 1) instanceof Defenseur){
+                    nearbyPawns.add(plate.pawnAt(this.getX(), this.getY() - 1));
+                }
+                break;
+            case 'D':
+                if (plate.pawnAt(this.getX() + 1, this.getY()) instanceof Attaquant) {
+                    nearbyPawns.add(plate.pawnAt(this.getX() + 1, this.getY()));
+                }
+                if (plate.pawnAt(this.getX() - 1, this.getY()) instanceof Attaquant){
+                    nearbyPawns.add(plate.pawnAt(this.getX() - 1, this.getY()));
+                }
+                if (plate.pawnAt(this.getX(), this.getY() + 1) instanceof Attaquant) {
+                    nearbyPawns.add(plate.pawnAt(this.getX(), this.getY() + 1));
+                }
+                if (plate.pawnAt(this.getX(), this.getY() - 1) instanceof Attaquant){
+                    nearbyPawns.add(plate.pawnAt(this.getX(), this.getY() - 1));
+                }
+                break;
+        }
+        return nearbyPawns;
+    }
+
+    /**
+     * Returns the relative position of a pawn, considering it is next to this other pawn (else it will return false)
+     * @return
+     */
+    public String relativePosition(Pion pawn) {
+        if (this.getX() == pawn.getX() && this.getY() - pawn.getY() == - 1) {
+            return "above";
+        } else if (this.getX() == pawn.getX() && this.getY() - pawn.getY() == 1) {
+            return "below";
+        } else if (this.getY() == pawn.getY() && this.getX() - pawn.getX() == 1) {
+            return "right";
+        } else if (this.getY() == pawn.getY() && this.getX() - pawn.getX() == - 1) {
+            return "left";
         } else {
-            return false;
+            return null;
         }
     }
 
-    public boolean captured(Plateau plate, char current_player) {
-        return switch (current_player) {
-            case 'A' -> !(this instanceof Branan) && this instanceof Defenseur && this.pawnBetweenEnemies(plate) && this.getVivant();
-            case 'D' -> this instanceof Attaquant && this.pawnBetweenEnemies(plate) && this.getVivant();
-            default -> throw new IllegalStateException("Unexpected value: " + current_player);
-        };
+    /**
+     * Returns true if current pawn is between pawn and another ennemy based on its relative position to the mentionned pawn
+     * @return
+     */
+    public boolean betweenPawnAndOtherEnnemy(char player, Plateau plate, Pion pawn) {
+        switch (player) {
+            case 'A':
+                switch (this.relativePosition(pawn)) {
+                    case "above":
+                        return plate.pawnAt(this.getX(), this.getY() - 1) instanceof Attaquant;
+                    case "below":
+                        return plate.pawnAt(this.getX(), this.getY() + 1) instanceof Attaquant;
+                    case "left":
+                        return plate.pawnAt(this.getX() - 1, this.getY()) instanceof Attaquant;
+                    case "right":
+                        return plate.pawnAt(this.getX() + 1, this.getY()) instanceof Attaquant;
+                }
+            case 'D':
+                switch (this.relativePosition(pawn)) {
+                    case "above":
+                        return plate.pawnAt(this.getX(), this.getY() - 1) instanceof Defenseur;
+                    case "below":
+                        return plate.pawnAt(this.getX(), this.getY() + 1) instanceof Defenseur;
+                    case "left":
+                        return plate.pawnAt(this.getX() - 1, this.getY()) instanceof Defenseur;
+                    case "right":
+                        return plate.pawnAt(this.getX() + 1, this.getY()) instanceof Defenseur;
+                }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if player's pawn is between ennemy pawn and center
+     * @return
+     */
+    public boolean betweenEmptyThroneAndEnnemy(char player, Plateau plate) {
+        if (plate.pawnAt(4, 4) != null) {
+            System.out.println("Throne occupied");
+            return false;
+        } else if (this.nearbyPawns(player, plate).size() == 0) {
+            System.out.println("No pawn nearby");
+            return false;
+        }
+        switch (player) {
+            case 'D':
+                System.out.println("Looking if Defender pawn is between ennemy and center");
+                return (
+                        (
+                            ( plate.pawnAt(this.getX(), this.getY() - 1) instanceof Attaquant && (this.getX() == 4 && this.getY() + 1 == 4) )
+                                ||
+                            ( plate.pawnAt(this.getX(), this.getY() + 1) instanceof Attaquant && (this.getX() == 4 && this.getY() - 1 == 4) )
+                        ) || (
+                            ( plate.pawnAt(this.getX() - 1, this.getY()) instanceof Attaquant && (this.getX() + 1 == 4 && this.getY() == 4) )
+                                ||
+                            ( plate.pawnAt(this.getX() + 1, this.getY()) instanceof Attaquant && (this.getX() - 1 == 4 && this.getY() == 4) )
+                        )
+                );
+            case 'A':
+                System.out.println("Looking if Attacker pawn is between ennemy and center");
+                return (
+                        (
+                                ( plate.pawnAt(this.getX(), this.getY() - 1) instanceof Defenseur && (this.getX() == 4 && this.getY() + 1 == 4) )
+                                        ||
+                                        ( plate.pawnAt(this.getX(), this.getY() + 1) instanceof Defenseur && (this.getX() == 4 && this.getY() - 1 == 4) )
+                        ) || (
+                                ( plate.pawnAt(this.getX() - 1, this.getY()) instanceof Defenseur && (this.getX() + 1 == 4 && this.getY() == 4) )
+                                        ||
+                                        ( plate.pawnAt(this.getX() + 1, this.getY()) instanceof Defenseur && (this.getX() - 1 == 4 && this.getY() == 4) )
+                        )
+                );
+        }
+        return false;
     }
 }

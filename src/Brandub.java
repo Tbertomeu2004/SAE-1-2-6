@@ -27,37 +27,37 @@ public class Brandub {
             round++;
             // While inputed values are not allowed
             do {
-                System.out.println("Tour " + round);
-
                 // Ask player input
                 do {
+                    System.out.println("Tour " + round);
+                    System.out.println("Joueur " + current_player);
                     plate.displayBoard();
-                    System.out.printf("Source : ");
+                    System.out.printf("Source (XY) : ");
                     source = input.nextLine();
-                    System.out.printf("Destination : ");
+                    System.out.printf("Destination (XY) : ");
                     dest = input.nextLine();
-                    System.out.println("Input Source : " + checkSource(source, plate));
-                    System.out.println("Input Destination : " + checkDestination(dest));
                 } while (!checkSource(source, plate) || !checkDestination(dest));
 
                 source_x = Integer.parseInt(String.valueOf(source.charAt(0)));
                 source_y = Integer.parseInt(String.valueOf(source.charAt(1)));
                 dest_x = Integer.parseInt(String.valueOf(dest.charAt(0)));
                 dest_y = Integer.parseInt(String.valueOf(dest.charAt(1)));
-                System.out.println("Move possible : " + plate.pawnAt(source_x, source_y).checkMove(dest_x, dest_y, plate, current_player));
             } while (!plate.pawnAt(source_x, source_y).checkMove(dest_x, dest_y, plate, current_player));
 
             // Move pawn
             plate.pawnAt(source_x, source_y).move(dest_x, dest_y);
-
-            // Check if any pawn has been captured
-            for (int i = 0; i < plate.pions.size(); i++) {
-                if (plate.pions.get(i).captured(plate, current_player)) {
-                    System.out.println("Pawn captured : " + plate.pions.get(i).captured(plate, current_player));
-                    plate.pions.get(i).setVivant(false);
+            for (int i = 0; i < plate.pawnAt(dest_x, dest_y).nearbyPawns(current_player, plate).size(); i++) {
+                if (plate.pawnAt(dest_x, dest_y).nearbyPawns(current_player, plate).get(i).betweenPawnAndOtherEnnemy(current_player, plate, plate.pawnAt(dest_x, dest_y))) {
+                    plate.pawnAt(dest_x, dest_y).nearbyPawns(current_player, plate).get(i).setVivant(false);
+                    System.out.println("Pion du joueur " + next_player + " capturé");
+                } else if (plate.pawnAt(dest_x, dest_y).nearbyPawns(current_player, plate).get(i).betweenEmptyThroneAndEnnemy(next_player, plate)) {
+                    plate.pawnAt(dest_x, dest_y).nearbyPawns(current_player, plate).get(i).setVivant(false);
+                    System.out.println("Pion du joueur " + next_player + " capturé");
                 }
             }
+
             if (plate.brananBetweenEnnemies()) {
+                System.out.println("Branan capturé");
                 plate.getBranan().setVivant(false);
             }
 
@@ -65,11 +65,17 @@ public class Brandub {
             tmp = current_player;
             current_player = next_player;
             next_player = tmp;
-            System.out.println("Branan between ennemies : " + plate.brananBetweenEnnemies());
-        } while (plate.getBranan().getVivant() || !plate.brananInCorner());
+        } while (plate.getBranan().getVivant() && !plate.brananInCorner());
+        System.out.println("Partie terminée (tour " + (round-1) + ")");
+        System.out.println("Gagnant: joueur " + next_player);
+        plate.displayBoard();
     }
 
     public static boolean checkSource(String source, Plateau plate) {
+        if (source.length() != 2) {
+            System.out.println("La source doit contenir 2 charactères");
+            return false;
+        }
         // Check if inputs are numeric with accepted values
         if (!isAcceptedNumeric(source.charAt(0)) || !isAcceptedNumeric(source.charAt(1))) {
             return false;
@@ -84,6 +90,10 @@ public class Brandub {
     }
 
     public static boolean checkDestination(String dest) {
+        if (dest.length() != 2) {
+            System.out.println("La destination doit contenir 2 charactères");
+            return false;
+        }
         // Check if inputs are numeric with accepted values
         return isAcceptedNumeric(dest.charAt(0)) && isAcceptedNumeric(dest.charAt(1));
     }
